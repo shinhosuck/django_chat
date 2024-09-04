@@ -5,6 +5,7 @@ import json
 
 class ChatRoomConsumer(AsyncWebsocketConsumer):
     async def connect(self):
+        print(self.scope)
         self.user_obj = self.scope['user']
         self.chat_room_name = self.scope['url_route']['kwargs']['chat_room_name']
         
@@ -22,7 +23,7 @@ class ChatRoomConsumer(AsyncWebsocketConsumer):
         
     async def receive(self, text_data=None, bytes_data=None):
         json_text_data = json.loads(text_data)['message']
-
+    
         event = {
             'type': 'handleEvent',
             'message': json_text_data
