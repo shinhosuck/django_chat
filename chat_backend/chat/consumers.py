@@ -5,7 +5,6 @@ import json
 
 class ChatRoomConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        print(self.scope)
         self.user_obj = self.scope['user']
         self.chat_room_name = self.scope['url_route']['kwargs']['chat_room_name']
         
