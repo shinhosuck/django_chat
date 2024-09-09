@@ -13,12 +13,14 @@ djangorestframework==3.15.2
 hyperlink==21.0.0
 idna==3.8
 incremental==24.7.2
+pillow==10.4.0
 pyasn1==0.6.0
 pyasn1_modules==0.4.0
 pycparser==2.22
 pyOpenSSL==24.2.1
 python-dotenv==1.0.1
 service-identity==24.1.0
+setuptools==74.1.1
 sqlparse==0.5.1
 tomli==2.0.1
 Twisted==24.7.0

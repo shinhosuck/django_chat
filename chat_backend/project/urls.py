@@ -8,6 +8,7 @@ from rest_framework.authtoken import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('chat.urls', namespace='chat')),
+    path('api/auth/', include('accounts.urls', namespace='accounts')),
     path('api-auth/', include('rest_framework.urls')),
     path('api-token-auth/', views.obtain_auth_token)
 ]
