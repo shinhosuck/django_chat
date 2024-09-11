@@ -60,26 +60,30 @@ def register_view(request):
     serializer =  UserRegisterSerializer(data=data, context={'request':request})
     if serializer.is_valid():
         serializer.save()
-        return Response({**serializer.data,'message': 'successfully registered'},
+        return Response({**serializer.data,'message': 'Successfully registered'},
                 status=status.HTTP_201_CREATED)
     errors = handle_error_response(serializer)
+    print(data.get('username'), data.get('email'))
     return Response(errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])
 def login_view(request):
+    print('hello')
     username = request.data.get('username')
     password = request.data.get('password')
+    error_obj = None
     try:
         user = User.objects.get(username=username)
     except User.DoesNotExist:
-        return Response({'error':"Password or username did not match."}, 
+        error_obj = {'username':username, 'password':password,}
+        return Response({**error_obj,'error':"Password or username did not match."}, 
                         status=status.HTTP_400_BAD_REQUEST)
     is_valid = user.check_password(password)
     if is_valid:
         serializer = ProfileSerializer(user.profile, context={'request':request})
         return Response({**serializer.data, 'message':'Successfully logged in.'}, status=status.HTTP_200_OK)
-    return Response({'error':'Password or username did not match.'}, status=status.HTTP_400_BAD_REQUEST)
+    return Response({**error_obj,'error':'Password or username did not match.'}, status=status.HTTP_400_BAD_REQUEST)
     
 
 @api_view(['PUT'])
