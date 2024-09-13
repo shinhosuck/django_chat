@@ -45,7 +45,8 @@ from utils.permissions import (
 
 User = get_user_model()
 
-@api_view(['GET'])
+@api_view(['POST'])
+@authentication_classes([TokenAuthentication])
 def get_profiles_view(request):
     if request.user.is_staff:
         profiles = Profile.objects.all()
@@ -69,7 +70,6 @@ def register_view(request):
 
 @api_view(['POST'])
 def login_view(request):
-    print('hello')
     username = request.data.get('username')
     password = request.data.get('password')
     error_obj = None
