@@ -37,11 +37,11 @@ class ChatRoomConsumer(AsyncWebsocketConsumer):
         
     async def receive(self, text_data=None, bytes_data=None):
         json_text_data = json.loads(text_data)
+        print(json_text_data)
     
         event = {
             'type': 'handleEvent',
-            'message': json_text_data['message'],
-            'id': json_text_data['id']
+            'message': json_text_data['message']
         }
 
         await self.channel_layer.group_send(
@@ -51,8 +51,7 @@ class ChatRoomConsumer(AsyncWebsocketConsumer):
 
     async def handleEvent(self, event):
         message = event.get('message')
-        id = event.get('id')
-        await self.send(text_data=json.dumps({'id':id, 'message':message}))
+        await self.send(text_data=json.dumps({'message':message}))
 
     def get_user(self):
         try:
