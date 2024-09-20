@@ -39,8 +39,8 @@ class UserMessage(models.Model):
 
 class ChatHistory(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='chat_history')
-    communities = models.ManyToManyField(ChatRoomCommunity)
-    users = models.ManyToManyField(User)
+    communities = models.ManyToManyField(ChatRoomCommunity, blank=True)
+    users = models.ManyToManyField(User, blank=True)
 
     class Meta:
         verbose_name_plural = 'Chat History'

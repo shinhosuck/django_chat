@@ -5,8 +5,9 @@ from .models import (
     ChatHistory
 )
 from rest_framework import serializers
+from django.contrib.auth import get_user_model 
 
-
+User = get_user_model()
 
 class ChatRoomCommunitySerializer(serializers.ModelSerializer):
     owner = serializers.StringRelatedField()
@@ -16,7 +17,7 @@ class ChatRoomCommunitySerializer(serializers.ModelSerializer):
         fields = ['id', 'owner', 'name', 'created', 'messages']
 
     def get_messages(self, obj):
-        serializer =CommunityMessageSerializer(obj.messages.all(),many=True)
+        serializer =CommunityMessageSerializer(obj.messages.all(), many=True)
         return serializer.data
     
 
@@ -36,22 +37,56 @@ class UserMessageSerializer(serializers.ModelSerializer):
         fields = ['id', 'user', 'recipient', 'message', 'created']
 
 
-class ChatHitorySerializer(serializers.ModelSerializer):
-    communities = serializers.SerializerMethodField(method_name='get__community', read_only=True)
+class ChatHistorySerializer(serializers.ModelSerializer):
+    communities = serializers.SerializerMethodField(method_name='get_communities', read_only=True)
+    users = serializers.SerializerMethodField(method_name='get_users', read_only=True)
     last_chat_date_community = serializers.SerializerMethodField(
             method_name='get_last_chat_date_community', 
             read_only=True
         )
+    last_chat_date_user = serializers.SerializerMethodField(
+            method_name='get_last_chat_users',
+            read_only=True
+        )
     class Meta:
         model = ChatHistory
-        fields = ['user', 'communities', 'users', 'last_chat_date_community']
+        fields = [
+            'user', 
+            'communities', 
+            'last_chat_date_community', 
+            'users', 
+            'last_chat_date_user'
+        ]
 
-    def get__community(self, obj):
+    def get_communities(self, obj):
         communities = list(obj.communities.all().values_list('name', flat=True))
         return communities
     
     def get_last_chat_date_community(self, obj):
-        communities = list(obj.communities.all().values_list('name', flat=True))
-        get_last_chat_date_community = [str(CommunityMessage.objects.filter(community__name=community)\
-        .order_by('-created').values_list('created', flat=True).first()) for community in communities]
-        return dict(zip(communities, get_last_chat_date_community))
+        user = self.context.get('request').user
+        communities = self.get_communities(obj)
+        last_chat_dates = {}
+
+        for community in communities:
+            created = CommunityMessage.objects.filter(author=user, community__name=community)\
+                .order_by('-created').first().created
+            last_chat_dates[community] = str(created)
+        return last_chat_dates
+
+    def get_users(self, obj):
+        users = list(obj.users.all().values_list('username', flat=True))
+        return users
+
+    def get_last_chat_users(self, obj):
+        user = self.context.get('request').user
+        users = self.get_users(obj)
+       
+        last_chat_dates = {}
+
+        for username in users:
+            user_obj = User.objects.get(username=username)
+            created = UserMessage.objects.filter(user=user, recipient=user_obj)\
+                .order_by('-created').first().created
+            last_chat_dates[username] = str(created)
+        return last_chat_dates
+            

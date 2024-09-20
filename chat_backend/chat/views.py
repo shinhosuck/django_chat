@@ -8,7 +8,7 @@ from .models import (
 from .serializers import (
     CommunityMessageSerializer, 
     ChatRoomCommunitySerializer,
-    ChatHitorySerializer,
+    ChatHistorySerializer,
     UserMessageSerializer
 )
 
@@ -64,14 +64,12 @@ class UserMessagesView(ListAPIView):
         serializer = UserMessageSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
+    
 class ChatHistoryView(ListAPIView):
     queryset = ChatHistory.objects.all()
-    # authentication_classes = [TokenAuthentication]
-    # permission_classes = [IsAuthenticated]
+    serializer_class = ChatHistorySerializer
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
 
-    def list(self, request, *args, **kwargs):
-        obj = self.get_queryset().filter(user=request.user).first()
-        serializer = ChatHitorySerializer(obj)
-        return Response(serializer.data)
-
-
+    def get_queryset(self):
+        return self.queryset.filter(user=self.request.user)
