@@ -80,7 +80,6 @@ class ChatHistorySerializer(serializers.ModelSerializer):
     def get_last_chat_users(self, obj):
         user = self.context.get('request').user
         users = self.get_users(obj)
-       
         last_chat_dates = {}
 
         for username in users:

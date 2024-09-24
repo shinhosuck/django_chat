@@ -48,11 +48,9 @@ User = get_user_model()
 @api_view(['POST'])
 @authentication_classes([TokenAuthentication])
 def get_profiles_view(request):
-    if request.user.is_staff:
-        profiles = Profile.objects.all()
-        serializer = ProfileSerializer(profiles, many=True, context={'request': request})
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    return Response({'error': 'Not allowed'}, status=status.HTTP_400_BAD_REQUEST)
+    profiles = Profile.objects.exclude(user=request.user)
+    serializer = ProfileSerializer(profiles, many=True, context={'request': request})
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
