@@ -2,9 +2,13 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from utils.validate_user import (
     validate_community_chat_user,
-    validate_private_chat_user
+    validate_private_chat_users,
+    get_current_user
 )
-from utils.create_obj import create_community_message_obj
+from utils.create_obj import (
+    create_community_message_obj,
+    create_private_message_obj
+)
 import json
 
 class ChatRoomConsumer(AsyncWebsocketConsumer):
@@ -58,57 +62,69 @@ class ChatRoomConsumer(AsyncWebsocketConsumer):
   
 class ChatRoomConsumerUser(AsyncWebsocketConsumer):
     async def connect(self):
-        self.user_info = {obj.split('=')[0]:obj.split('=')[1] 
-            for obj in self.scope.get('query_string')\
-            .decode()\
-            .split('&')}
-        self.chat_recipient = self.scope['url_route']['kwargs']['username']
+        self.current_user = await database_sync_to_async(get_current_user)(self.scope['query_string'])
+        self.private_chat_room_name = ''
+
+        self.other_user = self.scope['url_route']['kwargs']['username']
+
+        print(self.current_user)
        
-        self.validate = await database_sync_to_async(validate_private_chat_user)(self.user_info, self.chat_recipient)
-       
+        self.validate = await database_sync_to_async(validate_private_chat_users)(
+                self.current_user, 
+                self.other_user
+            )
+        
         if 'error' in self.validate:
             await self.accept()
             await self.send(json.dumps(self.validate))
             await self.close()
         else:
             await self.accept()
-            
-        if self.validate['user_id']:
-            user_ids = sorted([self.validate['user_id'], self.validate['other_user_id']])
-            self.room_name = f'private_chat_room{user_ids[0]}{user_ids[1]}'
-            
-            await self.channel_layer.group_add(
-                self.room_name,
-                self.channel_name
-            )
-    
-    async def disconnect(self, code):
-        await self.channel_layer.group_discard(
-            self.room_name,
+            self.private_chat_room_name = self.validate['private_chat_room']
+
+        await self.channel_layer.group_add(
+            self.private_chat_room_name,
             self.channel_name
         )
+
+
+    async def disconnect(self, code):
+        await self.channel_layer.group_discard(
+            self.private_chat_room_name,
+            self.channel_name
+        )
+
 
     async def receive(self, text_data=None, bytes_data=None):
         json_text_data = json.loads(text_data)
 
+        new_message = await database_sync_to_async(create_private_message_obj)(
+                self.current_user['user'], 
+                self.other_user, 
+                json_text_data['message'],
+                json_text_data['respondingTo'],
+            )
+
         event = {
             'type': 'handle_event',
-            'message': json_text_data['message']
+            'message': new_message
         }
 
         await self.channel_layer.group_send(
-            self.room_name,
+            self.private_chat_room_name,
             event
         )
 
         await self.send_message_to_user(self.validate['other_user_id'],{
-                'type':'handle_event', 
-                'message':json_text_data['message'], 
-                'user':self.user_info['user']
-            })
+            'type':'handle_event', 
+            'message':new_message, 
+            'user':self.current_user['user']
+        })
+
 
     async def handle_event(self, event):
         await self.send(text_data=json.dumps(event['message']))
+
 
     async def send_message_to_user(self, other_user_id, message_obj):
         channel_name = f'user_{other_user_id}'

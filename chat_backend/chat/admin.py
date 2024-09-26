@@ -17,7 +17,7 @@ class CommunityMessageAdmin(admin.ModelAdmin):
 
 @admin.register(UserMessage)
 class UserMessageAdmin(admin.ModelAdmin):
-    list_display = ['user', 'recipient', 'created']
+    list_display = ['user', 'other_user', 'created']
 
 @admin.register(ChatHistory)
 class ChatHistoryAdmin(admin.ModelAdmin):

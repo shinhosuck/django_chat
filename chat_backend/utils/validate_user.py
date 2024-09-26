@@ -21,7 +21,20 @@ def validate_community_chat_user(user):
     return {'valid':valid}
 
 
-def validate_private_chat_user(user, other_user):
+def get_current_user(query_string):
+    current_user = {}
+
+    for string in query_string.decode().split('&'):
+        key, value = string.split('=')
+        if key == 'user':
+            current_user['user'] = value 
+        else:
+            current_user['token'] = value
+
+    return current_user
+
+
+def validate_private_chat_users(user, other_user):
     validate_obj = {}
     username = user.get('user')
     token = user.get('token')
@@ -47,6 +60,7 @@ def validate_private_chat_user(user, other_user):
         return validate_obj
     else:
         validate_obj['other_user_id'] = other_user_obj.id
-        validate_obj['user_id'] = token_obj.user.id
+        private_chat_room = ''.join([str(num) for num in sorted([int(other_user_obj.id),int(token_obj.user.id)])])
+        validate_obj['private_chat_room'] = f'chat_room_{private_chat_room}'
     
     return validate_obj

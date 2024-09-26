@@ -51,19 +51,39 @@ class CommunityMessagesView(ListAPIView):
     def list(self, request, *args, **kwargs):
         queryset =  self.get_queryset().filter(community__name=kwargs['community_name'])
         serializer = CommunityMessageSerializer(queryset, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        if serializer.data:
+            return Response({
+                'message_list': serializer.data, 'type':'community'},
+                status=status.HTTP_200_OK
+            )
+        return Response({
+            'message': 'Messages available'}, 
+            status=status.HTTP_200_OK
+        )
 
 
 class UserMessagesView(ListAPIView):
     queryset = UserMessage.objects.all()
-    # authentication_classes = [TokenAuthentication]
-    # permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
 
     def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset().filter(user__username=kwargs['username'])
+        queryset = self.get_queryset().filter(
+            user=request.user,
+            other_user__username=kwargs['username']
+        )
+
         serializer = UserMessageSerializer(queryset, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    
+       
+        if serializer.data:
+            return Response({
+                'messages_list':serializer.data, 'type':'user'},
+                status=status.HTTP_200_OK
+            )
+        return Response({
+            'message': 'Messages available'}, 
+            status=status.HTTP_200_OK
+        )
     
 class ChatHistoryView(ListAPIView):
     queryset = ChatHistory.objects.all()
