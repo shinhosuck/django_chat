@@ -5,7 +5,7 @@
         "config":{"maxLambdaSize": "15mb", "runtime": "python3.10"}
     }],
     "routes": [{
-        "src": "/(.*)",
+        "src": "/api/(.*)",
         "dest": "project/asgi.py",
         "headers": [
             {
