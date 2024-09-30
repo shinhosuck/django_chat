@@ -66,7 +66,8 @@ TEMPLATES = [
 # WSGI_APPLICATION = 'project.wsgi.application'
 
 # django channels
-ASGI_APPLICATION = "project.asgi.application"
+# ASGI_APPLICATION = "project.asgi.application"
+ASGI_APPLICATION = "project.asgi.app"
 
 CHANNEL_LAYERS = {
     "default": {
