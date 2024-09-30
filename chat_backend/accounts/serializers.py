@@ -63,7 +63,6 @@ class ProfileSerializer(serializers.ModelSerializer):
                 'id', 
                 'user', 
                 'user_id',
-                # 'avatar',  
                 'first_name', 
                 'last_name', 
                 'email', 

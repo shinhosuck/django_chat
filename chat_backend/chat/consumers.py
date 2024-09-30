@@ -67,8 +67,6 @@ class ChatRoomConsumerUser(AsyncWebsocketConsumer):
 
         self.other_user = self.scope['url_route']['kwargs']['username']
 
-        print(self.current_user)
-       
         self.validate = await database_sync_to_async(validate_private_chat_users)(
                 self.current_user, 
                 self.other_user

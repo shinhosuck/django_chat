@@ -6,10 +6,11 @@ User = settings.AUTH_USER_MODEL
 
 
 class ChatRoomCommunity(models.Model):
-    owner = models.ForeignKey(User, on_delete=models.CASCADE)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='communities')
     name = models.CharField(max_length=50)
     created = models.DateTimeField(auto_now_add=True)
     logo = models.ImageField(upload_to='community_logos', null=True, blank=True)
+    users_in_the_room = models.ManyToManyField(User, blank=True)
 
     class Meta:
         verbose_name_plural = 'Chat Room Communities'
@@ -20,6 +21,10 @@ class ChatRoomCommunity(models.Model):
     def get_logo_url(self, request):
         url = request.build_absolute_uri(self.logo.url)
         return url
+    
+    def get_users_in_the_room(self):
+        users = self.users_in_the_room.prefetch_related('profile')
+        return users
     
 
 class CommunityMessage(models.Model):

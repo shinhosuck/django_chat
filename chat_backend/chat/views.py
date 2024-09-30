@@ -81,15 +81,69 @@ class UserMessagesView(ListAPIView):
                 status=status.HTTP_200_OK
             )
         return Response({
-            'message': 'Messages available'}, 
+            'message': 'Messages not available'}, 
             status=status.HTTP_200_OK
         )
     
-class ChatHistoryView(ListAPIView):
+class ChatHistoryView(RetrieveAPIView):
     queryset = ChatHistory.objects.all()
     serializer_class = ChatHistorySerializer
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
-    def get_queryset(self):
-        return self.queryset.filter(user=self.request.user)
+    def retrieve(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        qs = queryset.filter(user__username=kwargs['username']).first()
+
+        data = self.get_serializer(qs, context={'request':request}).data
+        
+        if not data['user']:
+            return Response(
+                {'message':'You do not have a chat history yet.'}, 
+                status=status.HTTP_200_OK
+            )
+        return Response(data, status=status.HTTP_200_OK)
+
+
+@api_view(['PUT'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def update_community_room(request):
+    rooms = ChatRoomCommunity.objects.all()
+    data = request.data 
+
+    if not 'previousRoom' in data:
+        room = rooms.get(name=data.get('currentRoom'))
+        room.users_in_the_room.add(request.user)
+
+    elif 'previousRoom' in data:
+        previous_room = rooms.get(name=data.get('previousRoom'))
+        previous_room.users_in_the_room.remove(request.user)
+
+        current_room = rooms.get(name=data.get('currentRoom'))
+        current_room.users_in_the_room.add(request.user)
+    
+    return Response({'message':'Success'}, status=status.HTTP_200_OK)
+
+
+@api_view(['PUT'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def update_community_chat_session(request, username):
+    user = request.user 
+
+    if user.username == username:
+        communities = ChatRoomCommunity.objects.filter(
+            users_in_the_room=user
+        )
+        
+        if communities:
+            for room in communities:
+                room.users_in_the_room.remove(user)
+
+        return Response({'message': 'success'}, status=status.HTTP_200_OK)
+    
+    return Response(
+            {'error':'Username or password did not match.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
