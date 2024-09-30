@@ -128,7 +128,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # django cors headers
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
-    "http://192.168.93.37:3000"
+    "https://dj-react-live-chat.netlify.app"
 ]
 
 CORS_ALLOW_METHODS = (
